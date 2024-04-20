@@ -1,0 +1,6 @@
+.DS_Store
+.idea
+target
+docker/volumes
+# Temporary files from running the tests locally like they would be run from CI
+.sqlx
