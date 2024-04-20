@@ -1,0 +1,18 @@
+services:
+  postgres:
+    image: postgres:16
+    #hostname: history_server
+    restart: unless-stopped
+    shm_size: 128mb
+    volumes:
+      - ./docker/volumes/pg/data:/var/lib/postgresql/data
+      - ./docker/init/pg/init-db.sh:/docker-entrypoint-initdb.d/init-db.sh
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    healthcheck:
+      test: "pg_isready --username=postgres && psql --username=postgres --list"
+      timeout: 2s
+      retries: 20

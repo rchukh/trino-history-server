@@ -1,0 +1,4 @@
+CREATE TABLE events(
+    id BIGSERIAL PRIMARY KEY,
+    data JSONB
+);
