@@ -12,3 +12,5 @@ SELECT
 --     extract(epoch from (data->>'endTime')::timestamp - (data->>'executionStartTime')::timestamp) * 1000 as execution_time_ms
 FROM events
 WHERE data->'metadata'->>'queryState' = 'FINISHED'
+ORDER BY (data->>'createTime')::timestamp DESC
+LIMIT $1 OFFSET $2
