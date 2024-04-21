@@ -1,13 +1,13 @@
-use std::time::Duration;
 use axum::http::{HeaderValue, Method};
+use std::time::Duration;
 
-use axum::Router;
 use axum::routing::{get, post};
+use axum::Router;
+use sqlx::postgres::PgPoolOptions;
 use sqlx::{Pool, Postgres};
-use sqlx::postgres::{PgPoolOptions};
 use tokio::net::TcpListener;
-use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 use tower_http::cors::CorsLayer;
+use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
 use crate::web::route::event;
 
@@ -52,7 +52,10 @@ async fn prepare_db() -> Pool<Postgres> {
 }
 
 fn routes(pool: Pool<Postgres>) -> Router {
-    let origin = std::env::var("ALLOW_ORIGIN").unwrap().parse::<HeaderValue>().unwrap();
+    let origin = std::env::var("ALLOW_ORIGIN")
+        .unwrap()
+        .parse::<HeaderValue>()
+        .unwrap();
     return Router::new()
         // Trino event listener
         // https://trino.io/docs/current/admin/event-listeners-http.html

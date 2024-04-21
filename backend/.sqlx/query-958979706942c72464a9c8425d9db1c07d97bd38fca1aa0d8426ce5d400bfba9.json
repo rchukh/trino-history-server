@@ -1,0 +1,47 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT\n    id,\n    data->'metadata'->>'queryId' as \"query_id\",\n    data->'context'->>'serverVersion' as server_version,\n    data->'context'->>'user' as \"user\",\n    data->'context'->>'source' as source\n-- ,\n--     data->'metadata'->>'query' as query, -- TODO: Truncate query for table\n--     (data->>'createTime')::timestamp as create_time,\n--     (data->>'executionStartTime')::timestamp as execution_start_time,\n--     (data->>'endTime')::timestamp as end_time,\n--     extract(epoch from (data->>'endTime')::timestamp - (data->>'executionStartTime')::timestamp) * 1000 as execution_time_ms\nFROM events\nWHERE data->'metadata'->>'queryState' = 'FINISHED'\nORDER BY (data->>'createTime')::timestamp DESC\nLIMIT $1 OFFSET $2\n",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 1,
+        "name": "query_id",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "server_version",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "user",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "source",
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int8",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false,
+      null,
+      null,
+      null,
+      null
+    ]
+  },
+  "hash": "958979706942c72464a9c8425d9db1c07d97bd38fca1aa0d8426ce5d400bfba9"
+}

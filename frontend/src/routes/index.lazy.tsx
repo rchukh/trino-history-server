@@ -41,7 +41,7 @@ const EventList = ({server_base}: EventListProps) => {
     const {
         data: {
             data = [],
-            meta
+            metadata
         } = {},
         isError,
         isRefetching,
@@ -58,8 +58,8 @@ const EventList = ({server_base}: EventListProps) => {
         ],
         queryFn: async () => {
             const fetchURL = new URL('/api/queries', server_base);
-            fetchURL.searchParams.set('start', `${pagination.pageIndex * pagination.pageSize}`);
-            fetchURL.searchParams.set('size', `${pagination.pageSize}`);
+            fetchURL.searchParams.set('offset', `${pagination.pageIndex * pagination.pageSize}`);
+            fetchURL.searchParams.set('limit', `${pagination.pageSize}`);
             fetchURL.searchParams.set('filters', JSON.stringify(columnFilters ?? []));
             fetchURL.searchParams.set('globalFilter', globalFilter ?? '');
             fetchURL.searchParams.set('sorting', JSON.stringify(sorting ?? []));
@@ -126,7 +126,7 @@ const EventList = ({server_base}: EventListProps) => {
                 </IconButton>
             </Tooltip>
         ),
-        rowCount: meta?.totalRowCount ?? 0,
+        rowCount: metadata?.totalRowCount ?? 0,
         state: {
             columnFilters,
             globalFilter,
