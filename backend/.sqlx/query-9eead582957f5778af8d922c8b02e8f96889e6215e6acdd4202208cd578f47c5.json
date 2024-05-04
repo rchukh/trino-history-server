@@ -1,0 +1,82 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT\n    id,\n    data->'metadata'->>'queryId' as \"query_id\",\n    data->'context'->>'serverVersion' as server_version,\n    data->'context'->>'user' as \"user\",\n    data->'context'->>'source' as source,\n    data->'metadata'->>'query' as query,\n    (data->>'createTime')::timestamp as create_time,\n    (data->>'executionStartTime')::timestamp as execution_start_time,\n    (data->>'endTime')::timestamp as end_time,\n    CAST(extract(\n      epoch from (data->>'endTime')::timestamp - (data->>'executionStartTime')::timestamp\n    ) * 1000 as int) as execution_time_ms,\n    -- -- Simple Plan\n    data->'metadata'->>'jsonPlan' as json_plan\n    -- Detailed Plan (100+ KB)\n    -- TODO: Convert subfields from string json with escapes to proper json\n    -- , data->'metadata'->>'payload' as payload\n    -- Operator details (50+ KB)\n    -- TODO: Convert subfields from string json with escapes to proper json\n    -- , data->'statistics'->>'operatorSummaries' as operator_summaries\nFROM events\nWHERE data->'metadata'->>'queryState' = 'FINISHED'\n  AND id = $1\n",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 1,
+        "name": "query_id",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "server_version",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "user",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "source",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 5,
+        "name": "query",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 6,
+        "name": "create_time",
+        "type_info": "Timestamp"
+      },
+      {
+        "ordinal": 7,
+        "name": "execution_start_time",
+        "type_info": "Timestamp"
+      },
+      {
+        "ordinal": 8,
+        "name": "end_time",
+        "type_info": "Timestamp"
+      },
+      {
+        "ordinal": 9,
+        "name": "execution_time_ms",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 10,
+        "name": "json_plan",
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    ]
+  },
+  "hash": "9eead582957f5778af8d922c8b02e8f96889e6215e6acdd4202208cd578f47c5"
+}

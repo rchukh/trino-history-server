@@ -1,0 +1,231 @@
+{
+  "0" : {
+    "id" : "13",
+    "name" : "Output",
+    "descriptor" : {
+      "columnNames" : "[c_birth_country, avg_birth_year]"
+    },
+    "outputs" : [ {
+      "type" : "varchar",
+      "name" : "c_birth_country"
+    }, {
+      "type" : "double",
+      "name" : "avg"
+    } ],
+    "details" : [ "avg_birth_year := avg" ],
+    "estimates" : [ {
+      "outputRowCount" : 10.0,
+      "outputSizeInBytes" : 168.16249057201958,
+      "cpuCost" : 0.0,
+      "memoryCost" : 0.0,
+      "networkCost" : 0.0
+    } ],
+    "children" : [ {
+      "id" : "229",
+      "name" : "TopN",
+      "descriptor" : {
+        "count" : "10",
+        "orderBy" : "[c_birth_country DESC NULLS LAST]"
+      },
+      "outputs" : [ {
+        "type" : "varchar",
+        "name" : "c_birth_country"
+      }, {
+        "type" : "double",
+        "name" : "avg"
+      } ],
+      "details" : [ ],
+      "estimates" : [ {
+        "outputRowCount" : 10.0,
+        "outputSizeInBytes" : 168.16249057201958,
+        "cpuCost" : "NaN",
+        "memoryCost" : "NaN",
+        "networkCost" : "NaN"
+      } ],
+      "children" : [ {
+        "id" : "321",
+        "name" : "LocalExchange",
+        "descriptor" : {
+          "partitioning" : "SINGLE",
+          "isReplicateNullsAndAny" : "",
+          "hashColumn" : "[]",
+          "arguments" : "[]"
+        },
+        "outputs" : [ {
+          "type" : "varchar",
+          "name" : "c_birth_country"
+        }, {
+          "type" : "double",
+          "name" : "avg"
+        } ],
+        "details" : [ ],
+        "estimates" : [ {
+          "outputRowCount" : 10.0,
+          "outputSizeInBytes" : 168.16249057201958,
+          "cpuCost" : 0.0,
+          "memoryCost" : 0.0,
+          "networkCost" : 0.0
+        } ],
+        "children" : [ {
+          "id" : "263",
+          "name" : "RemoteSource",
+          "descriptor" : {
+            "sourceFragmentIds" : "[1]"
+          },
+          "outputs" : [ {
+            "type" : "varchar",
+            "name" : "c_birth_country"
+          }, {
+            "type" : "double",
+            "name" : "avg"
+          } ],
+          "details" : [ ],
+          "estimates" : [ ],
+          "children" : [ ]
+        } ]
+      } ]
+    } ]
+  },
+  "1" : {
+    "id" : "228",
+    "name" : "TopNPartial",
+    "descriptor" : {
+      "count" : "10",
+      "orderBy" : "[c_birth_country DESC NULLS LAST]"
+    },
+    "outputs" : [ {
+      "type" : "varchar",
+      "name" : "c_birth_country"
+    }, {
+      "type" : "double",
+      "name" : "avg"
+    } ],
+    "details" : [ ],
+    "estimates" : [ {
+      "outputRowCount" : 10.0,
+      "outputSizeInBytes" : 168.16249057201958,
+      "cpuCost" : "NaN",
+      "memoryCost" : "NaN",
+      "networkCost" : "NaN"
+    } ],
+    "children" : [ {
+      "id" : "4",
+      "name" : "Aggregate",
+      "descriptor" : {
+        "type" : "FINAL",
+        "keys" : "[c_birth_country]",
+        "hash" : "[]"
+      },
+      "outputs" : [ {
+        "type" : "varchar",
+        "name" : "c_birth_country"
+      }, {
+        "type" : "double",
+        "name" : "avg"
+      } ],
+      "details" : [ "avg := avg(avg_0)" ],
+      "estimates" : [ {
+        "outputRowCount" : 212.0,
+        "outputSizeInBytes" : 3563.633346698619,
+        "cpuCost" : 1.2561918251602471E8,
+        "memoryCost" : 3563.633346698619,
+        "networkCost" : 0.0
+      } ],
+      "children" : [ {
+        "id" : "345",
+        "name" : "LocalExchange",
+        "descriptor" : {
+          "partitioning" : "HASH",
+          "isReplicateNullsAndAny" : "",
+          "hashColumn" : "[]",
+          "arguments" : "[c_birth_country::varchar]"
+        },
+        "outputs" : [ {
+          "type" : "varchar",
+          "name" : "c_birth_country"
+        }, {
+          "type" : "row(double,bigint)",
+          "name" : "avg_0"
+        } ],
+        "details" : [ ],
+        "estimates" : [ {
+          "outputRowCount" : 2000000.0,
+          "outputSizeInBytes" : 1.2561918251602471E8,
+          "cpuCost" : 1.2561918251602471E8,
+          "memoryCost" : 0.0,
+          "networkCost" : 0.0
+        } ],
+        "children" : [ {
+          "id" : "351",
+          "name" : "RemoteSource",
+          "descriptor" : {
+            "sourceFragmentIds" : "[2]"
+          },
+          "outputs" : [ {
+            "type" : "varchar",
+            "name" : "c_birth_country"
+          }, {
+            "type" : "row(double,bigint)",
+            "name" : "avg_0"
+          } ],
+          "details" : [ ],
+          "estimates" : [ ],
+          "children" : [ ]
+        } ]
+      } ]
+    } ]
+  },
+  "2" : {
+    "id" : "349",
+    "name" : "Aggregate",
+    "descriptor" : {
+      "type" : "PARTIAL",
+      "keys" : "[c_birth_country]",
+      "hash" : "[]"
+    },
+    "outputs" : [ {
+      "type" : "varchar",
+      "name" : "c_birth_country"
+    }, {
+      "type" : "row(double,bigint)",
+      "name" : "avg_0"
+    } ],
+    "details" : [ "avg_0 := avg(expr)" ],
+    "estimates" : [ {
+      "outputRowCount" : 2000000.0,
+      "outputSizeInBytes" : 1.2561918251602471E8,
+      "cpuCost" : "NaN",
+      "memoryCost" : "NaN",
+      "networkCost" : "NaN"
+    } ],
+    "children" : [ {
+      "id" : "56",
+      "name" : "ScanProject",
+      "descriptor" : {
+        "table" : "iceberg:default.output1$data@4641538211836605021"
+      },
+      "outputs" : [ {
+        "type" : "varchar",
+        "name" : "c_birth_country"
+      }, {
+        "type" : "bigint",
+        "name" : "expr"
+      } ],
+      "details" : [ "expr := CAST(c_birth_year AS bigint)", "c_birth_country := 15:c_birth_country:varchar", "c_birth_year := 14:c_birth_year:integer" ],
+      "estimates" : [ {
+        "outputRowCount" : 2000000.0,
+        "outputSizeInBytes" : 3.3449266E7,
+        "cpuCost" : 2.5169322E7,
+        "memoryCost" : 0.0,
+        "networkCost" : 0.0
+      }, {
+        "outputRowCount" : 2000000.0,
+        "outputSizeInBytes" : 3.2889378E7,
+        "cpuCost" : 3.2889378E7,
+        "memoryCost" : 0.0,
+        "networkCost" : 0.0
+      } ],
+      "children" : [ ]
+    } ]
+  }
+}

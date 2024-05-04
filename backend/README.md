@@ -25,3 +25,10 @@ External API:
 Frontend API:
 
 * `/api/queries` - list recorded events of Finished queries 
+
+
+## Notes
+
+. Why Rust?
+
+I want to learn Rust.

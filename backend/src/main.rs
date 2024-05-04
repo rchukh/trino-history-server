@@ -61,6 +61,7 @@ fn routes(pool: Pool<Postgres>) -> Router {
         // https://trino.io/docs/current/admin/event-listeners-http.html
         .route("/events", post(event::save))
         .route("/api/queries", get(event::list))
+        .route("/api/query/details", get(event::details))
         .layer(
             // see https://docs.rs/tower-http/latest/tower_http/cors/index.html
             // for more details
