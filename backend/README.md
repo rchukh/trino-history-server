@@ -11,7 +11,7 @@
     ```console
     make migrate
     ```
-4. Run service:
+4. Run debug build:
     ```console
     make run
     ```
@@ -26,6 +26,14 @@ Frontend API:
 
 * `/api/queries` - list recorded events of Finished queries 
 
+
+## Release build
+
+```console
+cargo build --release
+set -o allexport && source .env && set +o allexport
+./target/release/trino-history-server
+```
 
 ## Notes
 

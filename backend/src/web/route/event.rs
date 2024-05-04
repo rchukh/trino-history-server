@@ -5,11 +5,21 @@ use axum::http::StatusCode;
 use axum::response::IntoResponse;
 use axum::Json;
 use serde::{Deserialize, Serialize};
-use serde_json::{json, Value};
+use serde_json::Value;
 use sqlx::FromRow;
 
 use crate::db::pool::DatabaseConnection;
 use crate::web::route::table::{ReqTableOptions, RespTableMetadata};
+
+fn map_db_error() -> fn(sqlx::Error) -> (StatusCode, Json<Value>) {
+    |e| {
+        let error_response = serde_json::json!({
+            "status": "error",
+            "message": format!("Database error: { }", e),
+        });
+        (StatusCode::INTERNAL_SERVER_ERROR, Json(error_response))
+    }
+}
 
 pub async fn save(
     DatabaseConnection(mut conn): DatabaseConnection,
@@ -24,14 +34,10 @@ RETURNING id
         body as _
     )
     .fetch_one(&mut *conn)
-    .await;
-    return match query_result {
-        Ok(data) => Ok(Json(data.id)),
-        Err(error) => Err((
-            StatusCode::INTERNAL_SERVER_ERROR,
-            Json(json!({"status": "error","message": format!("{:?}", error)})),
-        )),
-    };
+    .await
+    .map_err(map_db_error())?;
+
+    return Ok(Json(query_result.id));
 }
 
 #[derive(Serialize)]
@@ -69,7 +75,7 @@ pub async fn list(
         .await
         .map_err(map_db_error())?
         .unwrap();
-    tracing::debug!("total_results {}", total_results);
+    tracing::debug!("Total events: {}", total_results);
 
     let query_result = sqlx::query_file_as!(
         QueryEvent,
@@ -89,21 +95,10 @@ pub async fn list(
     }));
 }
 
-fn map_db_error() -> fn(sqlx::Error) -> (StatusCode, Json<Value>) {
-    |e| {
-        let error_response = serde_json::json!({
-            "status": "error",
-            "message": format!("Database error: { }", e),
-        });
-        (StatusCode::INTERNAL_SERVER_ERROR, Json(error_response))
-    }
-}
-
-
 #[derive(Deserialize, Debug, Default)]
 #[serde(rename_all = "camelCase")]
 pub struct ReqQueryDetails {
-    pub id: Option<usize>
+    pub id: Option<usize>,
 }
 
 #[derive(FromRow, Serialize)]
@@ -131,14 +126,11 @@ pub async fn details(
     let id = query.id.unwrap();
     tracing::debug!("query: {:?}", query.0);
 
-    let query_details = sqlx::query_file_as!(
-        RespQueryDetails,
-        "queries/event_details.sql",
-        id as i64
-    )
-    .fetch_one(&mut *conn)
-    .await
-    .map_err(map_db_error())?;
+    let query_details =
+        sqlx::query_file_as!(RespQueryDetails, "queries/event_details.sql", id as i64)
+            .fetch_one(&mut *conn)
+            .await
+            .map_err(map_db_error())?;
 
     return Ok(Json(query_details));
 }
