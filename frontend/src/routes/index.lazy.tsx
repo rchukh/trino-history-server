@@ -11,9 +11,7 @@ export const Route = createLazyFileRoute('/')({
 
 type HistoryResults = {
     data: Array<QueryEvent>;
-    meta: {
-        totalRowCount: number;
-    };
+    metadata: TableMetadata;
 };
 
 type QueryEvent = {
@@ -23,6 +21,10 @@ type QueryEvent = {
     user: string;
     source: string;
 };
+
+type TableMetadata = {
+    totalRowCount: number;
+}
 
 interface EventListProps
 {
