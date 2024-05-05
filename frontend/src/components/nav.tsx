@@ -22,8 +22,8 @@ export function Nav({title, links}: { title: string, links?: NavLink[] })
         setAnchorElNav(null);
     };
     return (
-        <AppBar position="static">
-            <Toolbar variant="dense">
+        <AppBar position="fixed">
+            <Toolbar variant="dense" >
                 <Box sx={{flexGrow: 1, display: {xs: 'flex', md: 'none'}}}>
                     <IconButton
                         size="large"

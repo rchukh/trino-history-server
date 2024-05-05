@@ -91,7 +91,7 @@ export default function QueryPlanGraph() {
     }, [setEdges]);
 
     return (
-        <div style={{width: '100vw', height: '90vh'}}>
+        <div style={{width: '95vw', height: '90vh'}}>
             <ReactFlow
                 nodes={nodes}
                 edges={edges}
