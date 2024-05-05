@@ -6,8 +6,8 @@ use axum::Json;
 use serde_json::Value;
 use sqlx::PgPool;
 
-pub mod ui;
 pub mod listener;
+pub mod ui;
 
 // Utility function for mapping any error into a `500 Internal Server Error` response.
 pub fn internal_error<E>(err: E) -> (StatusCode, String)

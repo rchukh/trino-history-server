@@ -6,8 +6,8 @@ use tower_http::cors::CorsLayer;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
 use trino_history_server::db;
-use trino_history_server::web::ui;
 use trino_history_server::web::listener;
+use trino_history_server::web::ui;
 
 #[tokio::main]
 async fn main() {
