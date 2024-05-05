@@ -24,8 +24,8 @@ External API:
 
 Frontend API:
 
-* `/api/queries` - list recorded events of Finished queries 
-
+* `/api/queries?limit=<limit>&offset=<offset>` - list recorded query events
+* `/api/query/details?id=<id>` - query event details
 
 ## Release build
 
@@ -37,6 +37,6 @@ set -o allexport && source .env && set +o allexport
 
 ## Notes
 
-. Why Rust?
+Q: Why Rust?
 
-I want to learn Rust.
+A: I want to learn Rust.
