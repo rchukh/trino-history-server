@@ -1,25 +1,20 @@
 use axum::http::{HeaderValue, Method};
-use std::time::Duration;
-
-use axum::routing::{get, post};
 use axum::Router;
-use sqlx::postgres::PgPoolOptions;
 use sqlx::{Pool, Postgres};
 use tokio::net::TcpListener;
 use tower_http::cors::CorsLayer;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
-use crate::web::route::event;
-
-mod db;
-mod web;
+use trino_history_server::db;
+use trino_history_server::web::ui;
+use trino_history_server::web::listener;
 
 #[tokio::main]
 async fn main() {
     setup_tracing();
     tracing::warn!("Starting...");
 
-    let pool = prepare_db().await;
+    let pool = db::prepare_db().await;
     let app = routes(pool);
 
     let bind_host = std::env::var("BIND_IP").unwrap();
@@ -41,27 +36,15 @@ fn setup_tracing() {
         .init();
 }
 
-async fn prepare_db() -> Pool<Postgres> {
-    let db_connection_str = std::env::var("DATABASE_URL").unwrap();
-    return PgPoolOptions::new()
-        .max_connections(5)
-        .acquire_timeout(Duration::from_secs(3))
-        .connect(&db_connection_str)
-        .await
-        .expect("cannot connect to database");
-}
-
 fn routes(pool: Pool<Postgres>) -> Router {
     let origin = std::env::var("ALLOW_ORIGIN")
         .unwrap()
         .parse::<HeaderValue>()
         .unwrap();
-    return Router::new()
-        // Trino event listener
-        // https://trino.io/docs/current/admin/event-listeners-http.html
-        .route("/events", post(event::save))
-        .route("/api/queries", get(event::list))
-        .route("/api/query/details", get(event::details))
+
+    Router::new()
+        .merge(ui::router())
+        .merge(listener::router())
         .layer(
             // see https://docs.rs/tower-http/latest/tower_http/cors/index.html
             // for more details
@@ -73,5 +56,5 @@ fn routes(pool: Pool<Postgres>) -> Router {
                 .allow_origin(origin)
                 .allow_methods([Method::GET]),
         )
-        .with_state(pool);
+        .with_state(pool)
 }
