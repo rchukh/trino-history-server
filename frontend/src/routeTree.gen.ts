@@ -18,7 +18,7 @@ import { Route as rootRoute } from './routes/__root'
 
 const OverviewLazyImport = createFileRoute('/overview')()
 const IndexLazyImport = createFileRoute('/')()
-const QueryDetailsLazyImport = createFileRoute('/query/details')()
+const QueryDetailsIdLazyImport = createFileRoute('/query/details/$id')()
 
 // Create/Update Routes
 
@@ -32,10 +32,12 @@ const IndexLazyRoute = IndexLazyImport.update({
   getParentRoute: () => rootRoute,
 } as any).lazy(() => import('./routes/index.lazy').then((d) => d.Route))
 
-const QueryDetailsLazyRoute = QueryDetailsLazyImport.update({
-  path: '/query/details',
+const QueryDetailsIdLazyRoute = QueryDetailsIdLazyImport.update({
+  path: '/query/details/$id',
   getParentRoute: () => rootRoute,
-} as any).lazy(() => import('./routes/query/details.lazy').then((d) => d.Route))
+} as any).lazy(() =>
+  import('./routes/query/details.$id.lazy').then((d) => d.Route),
+)
 
 // Populate the FileRoutesByPath interface
 
@@ -49,8 +51,8 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof OverviewLazyImport
       parentRoute: typeof rootRoute
     }
-    '/query/details': {
-      preLoaderRoute: typeof QueryDetailsLazyImport
+    '/query/details/$id': {
+      preLoaderRoute: typeof QueryDetailsIdLazyImport
       parentRoute: typeof rootRoute
     }
   }
@@ -61,7 +63,7 @@ declare module '@tanstack/react-router' {
 export const routeTree = rootRoute.addChildren([
   IndexLazyRoute,
   OverviewLazyRoute,
-  QueryDetailsLazyRoute,
+  QueryDetailsIdLazyRoute,
 ])
 
 /* prettier-ignore-end */

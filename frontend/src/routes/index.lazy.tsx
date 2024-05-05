@@ -79,7 +79,7 @@ const EventList = ({server_base}: EventListProps) => {
                 accessorKey: 'id',
                 header: 'Id',
                 Cell: ({renderedCellValue, row}) => (
-                    <Link to="/query/details" search={{id: row.getValue("id")}}>
+                    <Link to="/query/details/$id" params={(prev) => ({ ...prev, id: row.getValue("id") })}>
                         {renderedCellValue}
                     </Link>
                 ),
