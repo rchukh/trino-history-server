@@ -1,94 +1,295 @@
-import ReactFlow, {addEdge, Background, Connection, Controls, Edge, MiniMap, Node, useEdgesState, useNodesState} from "reactflow";
-import {useCallback} from "react";
+import ReactFlow, {
+    addEdge,
+    Background,
+    Controls,
+    Edge,
+    MiniMap,
+    Node,
+    ReactFlowProvider,
+    useEdgesState,
+    useNodesState, useReactFlow
+} from "reactflow";
+import {useCallback, useLayoutEffect} from "react";
 import 'reactflow/dist/style.css';
+import ELK from 'elkjs/lib/elk.bundled.js';
 
-// TODO: Replace stub with an actual graph
-export default function QueryPlanGraph() {
-    const initialNodes: Node[] = [
-        {
-            id: '1',
-            type: 'input',
-            data: {label: 'Node 0'},
-            position: {x: 250, y: 5},
-            className: 'light',
-        },
-        {
-            id: '2',
-            data: {label: 'Group A'},
-            position: {x: 100, y: 100},
-            className: 'light',
-            style: {backgroundColor: 'rgba(255, 0, 0, 0.2)', width: 200, height: 200},
-        },
-        {
-            id: '2a',
-            data: {label: 'Node A.1'},
-            position: {x: 10, y: 50},
-            parentId: '2',
-        },
-        {
-            id: '3',
-            data: {label: 'Node 1'},
-            position: {x: 320, y: 100},
-            className: 'light',
-        },
-        {
-            id: '4',
-            data: {label: 'Group B'},
-            position: {x: 320, y: 200},
-            className: 'light',
-            style: {backgroundColor: 'rgba(255, 0, 0, 0.2)', width: 300, height: 300},
-            type: 'group',
-        },
-        {
-            id: '4a',
-            data: {label: 'Node B.1'},
-            position: {x: 15, y: 65},
-            className: 'light',
-            parentId: '4',
-            extent: 'parent',
-        },
-        {
-            id: '4b',
-            data: {label: 'Group B.A'},
-            position: {x: 15, y: 120},
-            className: 'light',
-            style: {
-                backgroundColor: 'rgba(255, 0, 255, 0.2)',
-                height: 150,
-                width: 270,
-            },
-            parentId: '4',
-        },
-        {
-            id: '4b1',
-            data: {label: 'Node B.A.1'},
-            position: {x: 20, y: 40},
-            className: 'light',
-            parentId: '4b',
-        },
-        {
-            id: '4b2',
-            data: {label: 'Node B.A.2'},
-            position: {x: 100, y: 100},
-            className: 'light',
-            parentId: '4b',
-        },
-    ];
-    const initialEdges = [
-        {id: 'e1-2', source: '1', target: '2', animated: true},
-        {id: 'e1-3', source: '1', target: '3'},
-        {id: 'e2a-4a', source: '2a', target: '4a'},
-        {id: 'e3-4b', source: '3', target: '4b'},
-        {id: 'e4a-4b1', source: '4a', target: '4b1'},
-        {id: 'e4a-4b2', source: '4a', target: '4b2'},
-        {id: 'e4b1-4b2', source: '4b1', target: '4b2'},
-    ];
-    const [nodes, , onNodesChange] = useNodesState(initialNodes);
-    const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
 
-    const onConnect = useCallback((connection: Connection | Edge) => {
-        setEdges((eds) => addEdge(connection, eds));
-    }, [setEdges]);
+const elk = new ELK();
+// See additional Elk options to configure:
+// - https://www.eclipse.org/elk/reference/algorithms.html
+// - https://www.eclipse.org/elk/reference/options.html
+const elkOptions = {
+    'elk.algorithm': 'layered',
+    'elk.direction': 'UP',
+    'elk.layered.spacing.nodeNodeBetweenLayers': '50'
+};
+const elkTopNodesOptions = {
+    'elk.algorithm': 'layered',
+    'elk.direction': 'UP',
+    "elk.padding": "[left=20, top=50, right=20, bottom=20]",
+}
+
+function toElkNode(node) {
+    return node.map((element) => ({
+        id: element.id,
+        data: element.data,
+        width: 100,
+        height: 50,
+        layoutOptions: {
+            // "elk.direction": "UP",
+            // "elk.padding": "[left=20, top=100, right=20, bottom=0]",
+            // 'elk.nodeLabels.placement': 'OUTSIDE V_CENTER H_CENTER'
+        },
+        children: element.children?.map((data) => {
+            toElkNode(data)
+        })
+    }))
+}
+
+function mapElkChildren(result: Node[], node) {
+    node.children?.forEach((child) => {
+        result.push({
+            id: child.id,
+            position: {x: child.x, y: child.y},
+            data: child.data,
+            style: {width: child.width, height: child.height},
+            parentId: node.id,
+            sourcePosition: 'top',
+            targetPosition: 'bottom',
+        })
+
+        mapElkChildren(result, child)
+    })
+}
+
+function fromElk(rootNode): Node[] {
+    let result: Node[] = []
+    Object
+        .entries(rootNode)
+        .forEach(([key, topNode]) => {
+                result.push({
+                    id: topNode.id,
+                    position: {x: topNode.x, y: topNode.y},
+                    data: topNode.data,
+                    sourcePosition: 'top',
+                    targetPosition: 'bottom',
+                    style: {
+                        width: topNode.width,
+                        height: topNode.height,
+                        backgroundColor: 'rgba(255, 0, 0, 0.2)'
+                    }
+                });
+                mapElkChildren(result, topNode)
+            }
+        )
+    return result;
+}
+
+const getLayoutedElements = (nodes, edges) => {
+    // Convert to ELK input
+    const graph = {
+        id: 'root',
+        layoutOptions: elkOptions,
+        children: nodes.map((group) => ({
+            id: group.id,
+            data: group.data,
+            layoutOptions: elkTopNodesOptions,
+            children: toElkNode(group.children)
+        })),
+        // edges: edges,
+        edges: edges.map((edge) => ({
+            id: edge.id,
+            sources: [edge.source],
+            targets: [edge.target]
+        }))
+    };
+    // console.log(graph)
+
+    return elk
+        // Apply ELK layout
+        .layout(graph)
+        // Convert back to XYFlow types
+        .then((layoutedGraph) => ({
+            nodes: fromElk(layoutedGraph.children),
+            edges: layoutedGraph.edges?.map((edge: any) => ({
+                id: edge.id,
+                source: edge.sources[0],
+                target: edge.targets[0],
+                type: 'default',
+                animated: true
+            }))
+        }))
+        .catch(console.error);
+};
+
+
+// TODO: Parse the node information on the backend
+interface QueryNodeOutput {
+    type: string,
+    name: string,
+}
+
+interface QueryNodeEstimates {
+    outputRowCount: number;
+    outputSizeInBytes: number;
+    cpuCost: number;
+    memoryCost: number;
+    networkCost: number;
+}
+
+interface QueryNode {
+    id: string;
+    name: string;
+    // TODO: Type-specific descriptor
+    descriptor: any;
+    outputs: QueryNodeOutput[];
+    details: string[];
+    estimates: QueryNodeEstimates[];
+    children: QueryNode[];
+}
+
+// Linked children
+function mapChildren(edges: Edge[], elements: QueryNode[], parentId?: string): PlanNode[] {
+    let nodes: PlanNode[] = []
+    elements.forEach((element) => {
+        let sourceFragmentIds = element.descriptor['sourceFragmentIds'];
+        if (sourceFragmentIds) {
+            let remoteSources = sourceFragmentIds.replace('[', '').replace(']', '').split(', ') as string[];
+            if (remoteSources.length > 0) {
+                remoteSources.forEach(sourceId => {
+                        edges.push(
+                            {
+                                id: `${element.id}-${sourceId}`,
+                                source: sourceId,
+                                target: element.id
+                            },
+                        )
+                    }
+                )
+            }
+        }
+        let elementChildren = mapChildren(edges, element.children, element.id)
+        if (parentId) {
+            edges.push(
+                {
+                    id: `${parentId}-${element.id}`,
+                    source: element.id,
+                    target: parentId,
+                },
+            )
+        }
+        elementChildren.forEach((child) => {
+            nodes.push(child)
+        })
+        nodes.push({
+            id: element.id,
+            data: {label: element.name}
+        })
+    });
+    return nodes;
+}
+
+// Nested children
+// function mapChildren(edges: Edge[], elements: QueryNode[]): PlanNode[] {
+//     return elements.map((element): PlanNode => {
+//         let sourceFragmentIds = element.descriptor['sourceFragmentIds'];
+//         if (sourceFragmentIds) {
+//             let remoteSources = sourceFragmentIds.replace('[', '').replace(']', '').split(', ') as string[];
+//             if (remoteSources.length > 0) {
+//                 remoteSources.forEach(sourceId => {
+//                         edges.push(
+//                             {
+//                                 id: `${sourceId}-${element.id}`,
+//                                 source: sourceId,
+//                                 target: element.id
+//                             },
+//                         )
+//                     }
+//                 )
+//             }
+//         }
+//         let elementChildren = mapChildren(edges, element.children)
+//
+//         return {
+//             id: element.id,
+//             // type: 'input',
+//             data: {
+//                 label: element.name
+//             },
+//             // position: position,
+//             className: 'light',
+//             children: elementChildren
+//         }
+//     });
+// }
+
+interface PlanNode {
+    id: string,
+    data: {
+        label: string
+    },
+    className?: string,
+    children?: PlanNode[]
+}
+
+function LayoutFlow({jsonPlan}: { jsonPlan: string }) {
+    let plan = JSON.parse(jsonPlan)
+    // console.log(plan)
+    let rawNodes: PlanNode[] = [];
+    let rawEdges: Edge[] = [];
+    Object
+        .entries(plan)
+        .forEach(
+            ([key, value]) => {
+                let typedNode = value as QueryNode
+                let children = mapChildren(rawEdges, typedNode.children)
+                rawNodes.push(
+                    {
+                        id: key,
+                        // type: 'input',
+                        data: {
+                            label: typedNode.name
+                        },
+                        // position: position,
+                        className: 'light',
+                        // style: {backgroundColor: 'rgba(255, 0, 0, 0.2)'},
+                        children: children
+                    }
+                )
+            }
+        );
+
+    // TODO: Connect parent groups on sourceFragmentIds
+    //       There may be issues with multi-source queries...
+    // NOTE: Without this the graph is not rendered with a proper direction.
+    rawEdges.push({id: `1-0`, source: "1", target: "0"})
+    rawEdges.push({id: `2-1`, source: "2", target: "1"})
+
+    const [nodes, setNodes, onNodesChange] = useNodesState([]);
+    const [edges, setEdges, onEdgesChange] = useEdgesState([]);
+    const {fitView} = useReactFlow();
+    const onConnect = useCallback((params) => setEdges((eds) => addEdge(params, eds)), []);
+    const onLayout = useCallback(
+        ({useInitialNodes = true}) => {
+            const ns = useInitialNodes ? rawNodes : nodes;
+            const es = useInitialNodes ? rawEdges : edges;
+
+            getLayoutedElements(ns, es).then((graph) => {
+                console.log(graph)
+                if (graph) {
+                    setNodes(graph.nodes);
+                    setEdges(graph.edges);
+                }
+                window.requestAnimationFrame(() => fitView());
+            });
+        },
+        [nodes, edges]
+    );
+
+    // Calculate the initial layout on mount.
+    useLayoutEffect(() => {
+        onLayout({useInitialNodes: true});
+    }, []);
 
     return (
         <div style={{width: '95vw', height: '90vh'}}>
@@ -98,7 +299,8 @@ export default function QueryPlanGraph() {
                 onNodesChange={onNodesChange}
                 onEdgesChange={onEdgesChange}
                 onConnect={onConnect}
-                className="react-flow-subflows-example"
+                // nodesDraggable={false}
+                nodesConnectable={false}
                 fitView
             >
                 <MiniMap/>
@@ -106,5 +308,13 @@ export default function QueryPlanGraph() {
                 <Background/>
             </ReactFlow>
         </div>
+    )
+}
+
+export default function QueryPlanGraph({jsonPlan}: { jsonPlan: string }) {
+    return (
+        <ReactFlowProvider>
+            <LayoutFlow jsonPlan={jsonPlan}/>
+        </ReactFlowProvider>
     )
 }
