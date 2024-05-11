@@ -11,7 +11,7 @@ import {
     Step,
     StepLabel,
     Stepper,
-    Table,
+    Table, TableBody,
     TableCell,
     TableContainer,
     TableRow,
@@ -20,6 +20,7 @@ import {
 import hljs from 'highlight.js/lib/core';
 import sql from 'highlight.js/lib/languages/sql';
 import "highlight.js/styles/github.min.css";
+import QueryPlanGraph from "@/components/queryPlanGraph.tsx";
 
 
 export const Route = createLazyFileRoute('/query/details/$id')({
@@ -34,7 +35,7 @@ function QueryDetails() {
     const {id} = Route.useParams()
 
     const {isPending, error, data, isFetching} = useQuery({
-        queryKey: ['repoData'],
+        queryKey: ['queryDetails', id],
         queryFn: () =>
             axios
                 .get(`api/query/details?id=${id}`)
@@ -97,36 +98,40 @@ function QueryDetails() {
                 <Grid item xs={6} sm={6} md={6} lg={6}>
                     <TableContainer component={Paper}>
                         <Table>
-                            <TableRow>
-                                <TableCell variant="head">ID</TableCell>
-                                <TableCell>{data.id}</TableCell>
-                            </TableRow>
-                            <TableRow>
-                                <TableCell variant="head">Query ID</TableCell>
-                                <TableCell>{data.queryId}</TableCell>
-                            </TableRow>
-                            <TableRow>
-                                <TableCell variant="head">Server Version</TableCell>
-                                <TableCell>{data.serverVersion}</TableCell>
-                            </TableRow>
+                            <TableBody>
+                                <TableRow>
+                                    <TableCell variant="head">ID</TableCell>
+                                    <TableCell>{data.id}</TableCell>
+                                </TableRow>
+                                <TableRow>
+                                    <TableCell variant="head">Query ID</TableCell>
+                                    <TableCell>{data.queryId}</TableCell>
+                                </TableRow>
+                                <TableRow>
+                                    <TableCell variant="head">Server Version</TableCell>
+                                    <TableCell>{data.serverVersion}</TableCell>
+                                </TableRow>
+                            </TableBody>
                         </Table>
                     </TableContainer>
                 </Grid>
                 <Grid item xs={6} sm={6} md={6} lg={6}>
                     <TableContainer component={Paper}>
                         <Table>
-                            <TableRow>
-                                <TableCell variant="head">User</TableCell>
-                                <TableCell>{data.user}</TableCell>
-                            </TableRow>
-                            <TableRow>
-                                <TableCell variant="head">Source</TableCell>
-                                <TableCell>{data.source}</TableCell>
-                            </TableRow>
-                            <TableRow>
-                                <TableCell variant="head">Execution Time</TableCell>
-                                <TableCell>{data.executionTimeMs} ms</TableCell>
-                            </TableRow>
+                            <TableBody>
+                                <TableRow>
+                                    <TableCell variant="head">User</TableCell>
+                                    <TableCell>{data.user}</TableCell>
+                                </TableRow>
+                                <TableRow>
+                                    <TableCell variant="head">Source</TableCell>
+                                    <TableCell>{data.source}</TableCell>
+                                </TableRow>
+                                <TableRow>
+                                    <TableCell variant="head">Execution Time</TableCell>
+                                    <TableCell>{data.executionTimeMs} ms</TableCell>
+                                </TableRow>
+                            </TableBody>
                         </Table>
                     </TableContainer>
                 </Grid>
@@ -139,11 +144,11 @@ function QueryDetails() {
                     </Paper>
                 </Grid>
 
-                {/*<Grid item xs={12}>*/}
-                {/*    <Paper sx={{p: 2}}>*/}
-                {/*        <QueryPlanGraph/>*/}
-                {/*    </Paper>*/}
-                {/*</Grid>*/}
+                <Grid item xs={12}>
+                    <Paper sx={{p: 2}}>
+                        <QueryPlanGraph jsonPlan={data.jsonPlan}/>
+                    </Paper>
+                </Grid>
             </Grid>
         </Container>
     )
